@@ -26,7 +26,8 @@ class HttpHandler(BaseHTTPRequestHandler):
         else:
             if pathlib.Path().joinpath(pr_url.path[1:]).exists():
                 self.send_static()
-            self.send_html_file('error.html', 404)
+            else:
+                self.send_html_file('error.html', 404)
 
     def send_html_file(self, filename, status=200):
         self.send_response(status)
@@ -52,8 +53,11 @@ class HttpHandler(BaseHTTPRequestHandler):
         data_dict = {key: value for key, value in [el.split('=') for el in data_parse.split('&')]}
         timestamp = datetime.now().isoformat()
 
-        with open('storage/data.json', 'r') as file:
-            storage = json.load(file)
+        try:
+            with open('storage/data.json', 'r') as file:
+                storage = json.load(file)
+        except (FileNotFoundError, json.JSONDecodeError):
+            storage = {}
         storage[timestamp] = data_dict
 
         with open('storage/data.json', 'w') as file:
@@ -65,7 +69,7 @@ class HttpHandler(BaseHTTPRequestHandler):
 
 
 def run(server_class=HTTPServer, handler_class=HttpHandler):
-    server_address = ('', 8000)
+    server_address = ('', 3000)
     http = server_class(server_address, handler_class)
     try:
         http.serve_forever()
